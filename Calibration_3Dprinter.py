@@ -1,7 +1,7 @@
 
 import serial
 import numpy as np
-import time
+#import time
 
 def read_from_port(ser):
 
@@ -135,22 +135,21 @@ def file_length(file_path):
         num_lines = sum(1 for line in file)
     return num_lines
 
-
-def main():
-
+def main(port1, baud_rate1, timeout1, port2, baud_rate2, timeout2):
     # Photodiode array COM port
-    port1 = 'COM4'        
-    baud_rate1 = 115200   
-    timeout1 = 0          
+    #port1 = 'COM4'        
+    #baud_rate1 = 115200   
+    #timeout1 = 0          
     ser_merilno = serial.Serial(port1, baud_rate1, timeout=timeout1)
 
     # 3D printer COM port
-    port2 = 'COM5'        
-    baud_rate2 = 250000 
-    timeout2 = 1        
+    #port2 = 'COM5'        
+    #baud_rate2 = 250000 
+    #timeout2 = 1        
     ser_3D = serial.Serial(port2, baud_rate2, timeout=timeout2)
 
-    
+    return 23
+
     uncalibrated_array = np.zeros((12,12))
 
     Gcode_input_path = "Data/GCODE_output.gcode" #Gcode file 
