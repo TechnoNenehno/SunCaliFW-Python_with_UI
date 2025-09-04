@@ -61,13 +61,31 @@ def set_all_diff_P(ser, all_powers):
     except Exception as e:
         print(f"An error occurred: {e}")
 
+####################################################################
+def open_serial_port(port, baud_rate, timeout):
+    try:
+        ser = serial.Serial(port, baud_rate, timeout=timeout)
+        return ser
+    except serial.SerialException as e:
+        return None
+
+#Helper function to open serial ports
+def Led_array_serial(port, baud_rate, timeout):
+    ser_led_array = open_serial_port(port, baud_rate, timeout)
+    if ser_led_array is None:
+        return (f"Failed to open serial port {port}.")
+    else:
+        return (f"Serial port {port} opened successfully.")
+
+#Global variables
+ser_led_array = None
 
 def main():
     
-    port1 = 'COM11'        
-    baud_rate1 = 115200   
-    timeout1 = 1         
-    ser_led_array = serial.Serial(port1, baud_rate1, timeout=timeout1)
+    #port1 = 'COM11'        
+    #baud_rate1 = 115200   
+    #timeout1 = 1         
+    #ser_led_array = serial.Serial(port1, baud_rate1, timeout=timeout1)
 
     powers = np.zeros(40)
     powers[0:8] = 100
@@ -86,7 +104,10 @@ def main():
     #set_all_diff_P(ser_led_array,powers)
     
     #set_all_same_P(ser_led_array,0)
-
+    if ser_led_array is not None and ser_led_array.is_open:
+        ser_led_array.close()
+        print("Serial port closed.")
+        ser_led_array = None
 
 if __name__ == "__main__":
     main()

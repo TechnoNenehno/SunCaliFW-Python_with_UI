@@ -9,32 +9,21 @@ import numpy as np
 import sys
 import io
 
-
-port = 'COM8'        
-baud_rate = 115200   
-timeout = 0          
-ser = serial.Serial(port, baud_rate, timeout=timeout)
-
-data_grid = np.zeros((12, 12), dtype=int)  
-data_history = [data_grid.copy()]
-
-data_lock = threading.Lock()
-
-stop_event = threading.Event()
-
-
-
-# Flag to track the start/stop state
-is_running = False
-
-#Import calibration weights
-skalirne_utezi = np.loadtxt("Weights/utezi_10s.txt")
-
-
-#Import unit conversion
-vrednost_sonca = np.loadtxt("Weights/vrednost_1_sonce.txt")
-vrednost_sonca = vrednost_sonca / 1000
-
+################################################################
+def open_serial_port(port, baud_rate, timeout):
+    try:
+        ser = serial.Serial(port, baud_rate, timeout=timeout)
+        return ser
+    except serial.SerialException as e:
+        return None
+    
+#Helper function to open serial ports
+def Misko_serial(port, baud_rate, timeout):
+    ser_misko = open_serial_port(port, baud_rate, timeout)
+    if ser_misko is None:
+        return (f"Failed to open serial port {port}.")
+    else:
+        return (f"Serial port {port} opened successfully.")
 
 
 def read_from_port():
@@ -45,8 +34,8 @@ def read_from_port():
         print(f"Receiving data on {port}...")
         try:
             while not stop_event.is_set():
-                if ser.in_waiting > 0:                 
-                    data = ser.readline().decode('utf-8').strip()
+                if ser_misko.in_waiting > 0:                 
+                    data = ser_misko.readline().decode('utf-8').strip()
 
                     col_values_dict = {}
                 
@@ -79,7 +68,7 @@ def send_to_port():
                 print("Exiting")
                 break
         
-            ser.write((user_input + '\n\r').encode('utf-8'))  # Send data to serial port
+            ser_misko.write((user_input + '\n\r').encode('utf-8'))  # Send data to serial port
             print(f"Sent: {user_input}")
     except KeyboardInterrupt:
         print("Stopped sending by user.")
@@ -88,11 +77,11 @@ def send_to_port():
 def toggle_command(event):
     global is_running
     if is_running:
-        ser.write(b'stop\n\r')  # Send the stop command to the serial port
+        ser_misko.write(b'stop\n\r')  # Send the stop command to the serial port
         print("Sent: stop")
         button.label.set_text("Začetek meritve")
     else:
-        ser.write(b'start\n\r')  # Send the start command to the serial port
+        ser_misko.write(b'start\n\r')  # Send the start command to the serial port
         print("Sent: start")
         button.label.set_text("Prekinitev meritve")
     is_running = not is_running
@@ -183,48 +172,76 @@ def on_click(event):
 
         plot_cell_history(cell_row, cell_coll)
 
+#merilnik in ne misko
 
-# Visualization setup
-fig, ax = plt.subplots()
-plt.subplots_adjust(bottom=0.2)  # Make space for the slider
-heatmap = ax.imshow(data_grid, cmap='viridis', vmin=900, vmax=1800, aspect='auto')
-plt.title("Toplotni zemljevid obsevanosti polja fotodiod", fontsize=14)
-cbar = plt.colorbar(heatmap)
-cbar.set_label(r"Obsevanost (W/m$^2$)", fontsize=14) 
-plt.xlabel("Stolpec", fontsize=14)
-plt.ylabel("Vrstica", fontsize=14)
-
-
-
-ax.set_xticks(np.arange(12))
-ax.set_yticks(np.arange(12))
-ax.set_xticklabels([f'{i}' for i in range(12)])
-ax.set_yticklabels([f'{i}' for i in range(12)])
-
-for col in range(2, 12, 2):  
-    ax.axvline(col - 0.5, color='black', linewidth=2)
-for row in range(3, 12, 3):
-    ax.axhline(row - 0.5, color='black', linewidth=2)
-
-
-# Create a button axis
-button_ax = plt.axes([0.86, 0.4, 0.06, 0.05])  
-button = Button(button_ax, "Začetek meritve") 
-button.on_clicked(toggle_command)
-
-
-annotations = [[ax.text(j, i, '', ha='center', va='center', color='white') for j in range(12)] for i in range(12)]
-
-fig.canvas.mpl_connect("button_press_event", on_click)
-
-
-ax_slider = plt.axes([0.2, 0.05, 0.6, 0.03], facecolor='lightgrey') 
-slider = Slider(ax_slider, 'Vzorec', 0, len(data_history), valinit=0, valstep=1)
-
-ani = FuncAnimation(fig, update_heatmap, interval=50, blit=False, cache_frame_data=False)
-
+#port = 'COM8'        
+#baud_rate = 115200   
+#timeout = 0          
+ser_misko = None
 
 def main():
+    
+    data_grid = np.zeros((12, 12), dtype=int)  
+    data_history = [data_grid.copy()]
+
+    data_lock = threading.Lock()
+
+    stop_event = threading.Event()
+
+
+
+    # Flag to track the start/stop state
+    is_running = False
+
+    #Import calibration weights
+    skalirne_utezi = np.loadtxt("Weights/utezi_10s.txt")
+
+
+    #Import unit conversion
+    vrednost_sonca = np.loadtxt("Weights/vrednost_1_sonce.txt")
+    vrednost_sonca = vrednost_sonca / 1000
+
+    # Visualization setup
+    fig, ax = plt.subplots()
+    plt.subplots_adjust(bottom=0.2)  # Make space for the slider
+    heatmap = ax.imshow(data_grid, cmap='viridis', vmin=900, vmax=1800, aspect='auto')
+    plt.title("Toplotni zemljevid obsevanosti polja fotodiod", fontsize=14)
+    cbar = plt.colorbar(heatmap)
+    cbar.set_label(r"Obsevanost (W/m$^2$)", fontsize=14) 
+    plt.xlabel("Stolpec", fontsize=14)
+    plt.ylabel("Vrstica", fontsize=14)
+
+
+
+    ax.set_xticks(np.arange(12))
+    ax.set_yticks(np.arange(12))
+    ax.set_xticklabels([f'{i}' for i in range(12)])
+    ax.set_yticklabels([f'{i}' for i in range(12)])
+
+    for col in range(2, 12, 2):  
+        ax.axvline(col - 0.5, color='black', linewidth=2)
+    for row in range(3, 12, 3):
+        ax.axhline(row - 0.5, color='black', linewidth=2)
+
+
+    # Create a button axis
+    button_ax = plt.axes([0.86, 0.4, 0.06, 0.05])  
+    button = Button(button_ax, "Začetek meritve") 
+    button.on_clicked(toggle_command)
+
+
+    annotations = [[ax.text(j, i, '', ha='center', va='center', color='white') for j in range(12)] for i in range(12)]
+
+    fig.canvas.mpl_connect("button_press_event", on_click)
+
+
+    ax_slider = plt.axes([0.2, 0.05, 0.6, 0.03], facecolor='lightgrey') 
+    slider = Slider(ax_slider, 'Vzorec', 0, len(data_history), valinit=0, valstep=1)
+
+    ani = FuncAnimation(fig, update_heatmap, interval=50, blit=False, cache_frame_data=False)
+
+    ###########################################################################################
+    
     try:
         read_thread = threading.Thread(target=read_from_port)
         #send_thread = threading.Thread(target=send_to_port)
@@ -240,9 +257,10 @@ def main():
         #send_thread.join()
 
     finally:
-        ser.close()
+        ser_misko.close()
         print("Serial port closed. \n")
 
-
+        ser_misko = None
+        
 if __name__ == "__main__":
     main()

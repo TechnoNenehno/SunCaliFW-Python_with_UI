@@ -1,15 +1,30 @@
 import serial
 import numpy as np
 import time
-import Calibration_1sample as cal
+import Photodiode_calibration_under_Xenon_sun.Calibration_1sample as cal
 
+################################################################
+def open_serial_port(port, baud_rate, timeout):
+    try:
+        ser = serial.Serial(port, baud_rate, timeout=timeout)
+        return ser
+    except serial.SerialException as e:
+        return None
+    
+#Helper function to open serial ports
+def Photodiode_serial(port, baud_rate, timeout):
+    ser_merilno = open_serial_port(port, baud_rate, timeout)
+    if ser_merilno is None:
+        return (f"Failed to open serial port {port}.")
+    else:
+        return (f"Serial port {port} opened successfully.")
 
+ser_merilno = None
 def main():
 
-    port = 'COM4'        
-    baud_rate = 115200   
-    timeout = 0          
-    ser = serial.Serial(port, baud_rate, timeout=timeout)
+    #port = 'COM4'        
+    #baud_rate = 115200   
+    #timeout = 0          
 
     output_file_raw = "Logs/Calibration_10s_RAW.txt"
 
@@ -22,9 +37,9 @@ def main():
     #10 sample calibration !!!
     try:
         for i in range(10):
-            ser.write(b'pulse\n\r')  
+            ser_merilno.write(b'pulse\n\r')  
             print(i,end=' ')
-            data_grid= cal.read_from_port(ser)
+            data_grid= cal.read_from_port(ser_merilno)
             time.sleep(0.05)
 
             with open(output_file_raw, "a") as file:
@@ -52,9 +67,11 @@ def main():
 
         np.savetxt('Weights/utezi_10s.txt', utezi)
         print("Calibration Completed!")
-        ser.close()
+        ser_merilno.close()
         print("Serial port closed.")
 
+        ser_merilno = None
+    return (f"Calibration 10 samples complete.")
 
 if __name__ == "__main__":
     main()

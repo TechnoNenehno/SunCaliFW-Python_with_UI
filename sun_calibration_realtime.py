@@ -56,15 +56,14 @@ def get_initial_weights1(ser_merilno, ser_led_array, photodiode_weights):
 
     initial_weights = np.zeros((144,40))
     data_grid = np.zeros((12,12))
-
+    #nastavljanje modulov in merjenje
     try:
         for module in range(0,40):
             
             powers = np.zeros(40, dtype=int)
             powers[module] = 100
-            print(module)
-        
-            print("Sending led command")
+            #print(module)
+            #print("Sending led command")
             led.set_all_diff_P(ser_led_array, powers)
             
 
@@ -178,20 +177,46 @@ def calculate_module_powers(weights, target_homogeneity):
 
     return module_powers
 
+####################################################################
+def open_serial_port(port, baud_rate, timeout):
+    try:
+        ser = serial.Serial(port, baud_rate, timeout=timeout)
+        return ser
+    except serial.SerialException as e:
+        return None
+
+#Helper function to open serial ports
+def Photodiode_serial(port, baud_rate, timeout):
+    ser_merilno = open_serial_port(port, baud_rate, timeout)
+    if ser_merilno is None:
+        return (f"Failed to open serial port {port}.")
+    else:
+        return (f"Serial port {port} opened successfully.")
+
+def Led_array_serial(port, baud_rate, timeout):
+    ser_led_array = open_serial_port(port, baud_rate, timeout)
+    if ser_led_array is None:
+        return (f"Failed to open serial port {port}.")
+    else:
+        return (f"Serial port {port} opened successfully.")
+
+#Global variables
+ser_merilno = None
+ser_led_array = None
 
 def main():
 
     # Photodiode array COM port
-    port1 = 'COM4'        
-    baud_rate1 = 115200   
-    timeout1 = 0          
-    ser_merilno = serial.Serial(port1, baud_rate1, timeout=timeout1)
+    #port1 = 'COM4'        
+    #baud_rate1 = 115200   
+    #timeout1 = 0          
+    #ser_merilno = serial.Serial(port1, baud_rate1, timeout=timeout1)
 
     #LED array COM port
-    port2 = 'COM11'        
-    baud_rate2 = 115200   
-    timeout2 = 0     
-    ser_led_array = serial.Serial(port2, baud_rate2, timeout=timeout2)
+    #port2 = 'COM11'        
+    #baud_rate2 = 115200   
+    #timeout2 = 0     
+    #ser_led_array = serial.Serial(port2, baud_rate2, timeout=timeout2)
 
     output_file_raw ="Logs/Realtime_sun_calibration_RAW.txt" #Log file
     photodiode_weights = np.loadtxt("Weights/utezi_3D.txt") #Calibration weights for Photodiode array
@@ -206,6 +231,7 @@ def main():
 
     target_homogeneity= np.full(144, obsevanost)  # Target constant homogeneity value, set value accordingly
 
+    #zacetek kalibracije
     try: 
         
         weights = get_initial_weights1(ser_merilno, ser_led_array, photodiode_weights)
@@ -220,7 +246,7 @@ def main():
         write_to_log(output_file_raw, measured_values, statistics)
 
 
-        for _ in range(2): #length can be shortened
+        for _ in range(2): #length can be shortened, number of iterations
 
             weights = get_iterative_weights(ser_merilno, ser_led_array, photodiode_weights, module_powers, weights)
             module_powers = calculate_module_powers(weights, target_homogeneity)
@@ -247,7 +273,10 @@ def main():
         ser_merilno.close()
         ser_led_array.close()
         print("Serial ports closed.")
-
+        ser_merilno = None
+        ser_led_array = None
+    
+    return (f"Sun calibration complete.")
 
 if __name__ == "__main__":
     main()
