@@ -16,5 +16,5 @@ When the calibration is done do the validation the same way as you did the calib
 ## Debugging
 If values are not the same as the example already done, check the printer platform height. Take a meter and measure the distance, like it is shown in the picture below. The height should be around 25.8 cm from the printer top panel to the lower platform.
 ![check](Images/Printer_setup/meter_check.jpg)
-If wrong values still persist, check the jumper positions on the measurement unit. The right positions are in the [PCB_jumper_psotions](Images/PCB_jumper_positions) folder.
+If wrong values still persist, check the jumper positions on the measurement unit. The right positions are in the [PCB_jumper_positions](Images/PCB_jumper_positions) folder.
 For any questions contact me on my email: brunocernak1@gmail.com
