@@ -83,7 +83,12 @@ def array_to_gcode(array,output_gcode):
             gcode_file.write("M107 ; Turn off fan\n")
             gcode_file.write("G28 X0 Y0 Z0 ;move X/Y/Z to min endstops\n")
             #hardcoded Z height for 3D printer, where u get 1000 W/m2 on photodiode array which is one Sun
-            gcode_file.write("G1 Z32.7 F9000 ;move the platform down 32.7 mm\n")
+            gcode_file.write("G1 Z48.7 F9000 ;move the platform down 48.7 mm\n")
+            #32.7mm -> peak value 32xxx
+            #37.7 -> peak value 25xxx
+            #42.7 -> peak value 21xxx
+            #45.7 -> peak value 19xxx
+            #48.7 -> peak value 
             
             
             for row in array:
@@ -121,10 +126,10 @@ def process_column(col, line_to_send, reverse, first_half, Gcode_input_path, ser
             # Update the global uncalibrated_array with the new data
             global uncalibrated_array
             uncalibrated_array[row,col] = uncalibrated_array[row,col] + data_grid[row,col]
-
+            data_grid_int = data_grid.round().astype(int)
             with open(output_file_raw, "a") as file:
                 file.write(f"ROW: {row} COL: {col}\n")
-                file.write(np.array2string(data_grid) + '\n')
+                file.write(np.array2string(data_grid_int, max_line_width=5000) + '\n')
                 file.write("\n")
 
     return line_to_send
@@ -144,11 +149,11 @@ def file_length(file_path):
     return num_lines
 
 def open_serial_port(port, baud_rate, timeout):
-    try:
-        ser = serial.Serial(port, baud_rate, timeout=timeout)
+    ser = serial.Serial(port, baud_rate, timeout=timeout)
+    if ser.is_open:
         return ser
-    except serial.SerialException as e:
-        return None
+    else:
+        pass
 
 #Helper function to open serial ports
 def Photodiode_serial(port, baud_rate, timeout1):
@@ -278,19 +283,21 @@ def continue_photodiode_calibration(ser_merilno, ser_3D):
 
     #not modified only used below
     utezi = value_calibration2D(uncalibrated_array)
+    utezi_rounded = utezi.round(4)
     kalibrarano = uncalibrated_array*utezi
+    kalibrirano_int = kalibrarano.round().astype(int)
 
     cal_avg = np.mean(kalibrarano)
     cal_avg = cal_avg / 10
     cal_avg = np.round(cal_avg)
 
     with open(output_file_raw, "a") as file:
-        file.write("\n\rArray to be calibrated:\n\r")
-        file.write(np.array2string(uncalibrated_array) + '\n')
+        file.write("Array to be calibrated:\n\r")
+        file.write(np.array2string(uncalibrated_array, max_line_width=5000) + '\n')
         file.write("\n\rCalculated weights:\n\r")
-        file.write(np.array2string(utezi) + '\n')
+        file.write(np.array2string(utezi_rounded, max_line_width=5000) + '\n')
         file.write("\n\rCalculated calibrated array:\n\r")
-        file.write(np.array2string(kalibrarano))
+        file.write(np.array2string(kalibrirano_int, max_line_width=5000))
 
     # Prepare file paths
     utezi_dir = os.path.join(os.path.dirname(__file__), "Weights")
@@ -302,10 +309,10 @@ def continue_photodiode_calibration(ser_merilno, ser_3D):
 
     # If file exists, add date to filename
     if os.path.exists(utezi_path):
-        date_str = datetime.now().strftime("%d%m%Y")
+        date_str = datetime.now().strftime("%Y%m%d")
         utezi_path = os.path.join(utezi_dir, f"utezi_3D_{date_str}.txt")
     if os.path.exists(vrednost_1_sonce_path):
-        date_str = datetime.now().strftime("%d%m%Y")
+        date_str = datetime.now().strftime("%Y%m%d")
         vrednost_1_sonce_path = os.path.join(utezi_dir, f"vrednost_1_sonce_{date_str}.txt")
 
     np.savetxt(utezi_path, utezi) # saves Calibration weights

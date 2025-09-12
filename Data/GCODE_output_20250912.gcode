@@ -2,7 +2,7 @@ G21 ; Set units to mm
 G90 ; Use absolute positioning
 M107 ; Turn off fan
 G28 X0 Y0 Z0 ;move X/Y/Z to min endstops
-G1 Z32.7 F9000 ;move the platform down 32.7 mm
+G1 Z48.7 F9000 ;move the platform down 48.7 mm
 G1 X23.0 Y145.0 
 G1 X23.0 Y140.1 
 G1 X23.0 Y135.1 
