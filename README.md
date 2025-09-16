@@ -5,6 +5,7 @@ LED module should be set to 100% illumination because Z distance of 3D printer i
 Command for led module: 
 -a_l[100] (set illumination to 100%)
 -a_l[0] (set illumination to 0%)
+This is already take care of in LabVIEW UI.
 ## Start of Calibration
 When starting the calibration the most important part is the photodiode array orientation. The array should be orientated like the pictures below and be vary of the side where the connector is connected. To run the program there is a UI in LabVIEW in the "LabVIEW_UI" folder. When using the UI it provides instructions and information messages. Also turn the fan ON, the LED module gets hot really fast and loses stability.
 ![start1](Images/Printer_setup/start_SIDE.jpg)

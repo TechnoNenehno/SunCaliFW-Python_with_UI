@@ -77,7 +77,7 @@ def array_to_gcode(array,output_gcode):
             gcode_file.write("M107 ; Turn off fan\n")
             gcode_file.write("G28 X0 Y0 Z0 ;move X/Y/Z to min endstops\n")
             #hardcoded Z height for 3D printer, where u get 1000 W/m2 on photodiode array which is one Sun
-            gcode_file.write("G1 Z32.7 F9000 ;move the platform down 32.7 mm\n")
+            gcode_file.write("G1 Z48.7 F9000 ;move the platform down 48.7 mm\n")
             
             
             for row in array:
@@ -114,10 +114,11 @@ def process_column_validation(col, line_to_send, reverse, first_half, Gcode_inpu
         # Update the global uncalibrated_array with the new data
         global uncalibrated_array
         uncalibrated_array[row,col] = data_grid[row,col]
+        data_grid_int = data_grid.round().astype(int)
 
         with open(output_file_raw, "a") as file:
             file.write(f"ROW: {row} COL: {col}\n")
-            file.write(np.array2string(data_grid) + '\n')
+            file.write(np.array2string(data_grid_int, max_line_width=5000) + '\n')
             file.write("\n")
 
     return line_to_send
@@ -141,11 +142,11 @@ def calculate_statistics(array):
 
 ####################################################################
 def open_serial_port(port, baud_rate, timeout):
-    try:
-        ser = serial.Serial(port, baud_rate, timeout=timeout)
+    ser = serial.Serial(port, baud_rate, timeout=timeout)
+    if ser.is_open:
         return ser
-    except serial.SerialException as e:
-        return None
+    else:
+        pass
 
 #Helper function to open serial ports
 def Photodiode_serial(port, baud_rate, timeout1):
@@ -281,29 +282,25 @@ def continue_photodiode_validation(ser_merilno, ser_3D):
 ###ok tuki naprej
     #not modified only used below
     kalibrirano = uncalibrated_array*utezi
-    kalibrirano = kalibrirano.round()
+    kalibrirano = kalibrirano.round().astype(int)
 
     statistics = calculate_statistics(kalibrirano)
-
-    with open(output_file_raw, "a") as file:
-        file.write("RAW sample used for calculating the weights:\n\r")
-
-
+    
     with open(output_file_raw, "a") as file:
             file.write("\n\rMeasured Array:\n\r")
-            file.write(np.array2string(uncalibrated_array) + '\n')
+            file.write(np.array2string(uncalibrated_array,max_line_width=5000) + '\n')
             file.write("\n\rCalculated calibrated array:\n\r")
-            file.write(np.array2string(kalibrirano) + '\n')
-            file.write("\nMIN: " + np.array2string(statistics[0]) + '\n')
-            file.write("MAX: " + np.array2string(statistics[1]) + '\n')
-            file.write("DELTA: " + np.array2string(statistics[3]) + '\n')
-            file.write("MEAN: " + np.array2string(statistics[2]) + '\n')
+            file.write(np.array2string(kalibrirano,max_line_width=5000) + '\n')
+            file.write("\nMIN: " + np.array2string(statistics[0],max_line_width=5000) + '\n')
+            file.write("MAX: " + np.array2string(statistics[1],max_line_width=5000) + '\n')
+            file.write("DELTA: " + np.array2string(statistics[3],max_line_width=5000) + '\n')
+            file.write("MEAN: " + np.array2string(statistics[2],max_line_width=5000) + '\n')
     ser_merilno.close()
     ser_3D.close()
 
     ser_merilno = None
     ser_3D = None
-    return (f"Validation of photodiodes complete. Serial ports closed.")
+    
     plt.figure(figsize=(8, 5))
     plt.imshow(kalibrirano, cmap="viridis", aspect="auto")
 
@@ -318,7 +315,7 @@ def continue_photodiode_validation(ser_merilno, ser_3D):
     plt.xticks(ticks=np.arange(12), labels=np.arange(12))
     plt.yticks(ticks=np.arange(12), labels=np.arange(12))
     plt.show()
-
+    return (f"Validation of photodiodes complete. Serial ports closed.")
 
 def main():
     # Photodiode array COM port

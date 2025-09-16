@@ -201,7 +201,7 @@ def calibrate_3D_printer(ser_3D):
     send_gcode_line(Gcode_input_path,ser_3D,3)
     time.sleep(15)
     send_gcode_line(Gcode_input_path,ser_3D,4)
-    return("3D printer calibrated to (0,0) position. Insert board and press *Start calibrating* \n\r")
+    return(f"3D printer calibrated to (0,0) position. Insert board and press *Start calibrating* \n\r")
 
 def start_photodiode_calibration(ser_merilno, ser_3D):
     ###############################################################################

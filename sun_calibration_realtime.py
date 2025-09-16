@@ -207,16 +207,16 @@ ser_led_array = None
 def main():
 
     # Photodiode array COM port
-    #port1 = 'COM4'        
-    #baud_rate1 = 115200   
-    #timeout1 = 0          
-    #ser_merilno = serial.Serial(port1, baud_rate1, timeout=timeout1)
+    port1 = 'COM56'        
+    baud_rate1 = 115200   
+    timeout1 = 0          
+    ser_merilno = serial.Serial(port1, baud_rate1, timeout=timeout1)
 
     #LED array COM port
-    #port2 = 'COM11'        
-    #baud_rate2 = 115200   
-    #timeout2 = 0     
-    #ser_led_array = serial.Serial(port2, baud_rate2, timeout=timeout2)
+    port2 = 'COM33'        
+    baud_rate2 = 115200   
+    timeout2 = 0     
+    ser_led_array = serial.Serial(port2, baud_rate2, timeout=timeout2)
 
     output_file_raw ="Logs/Realtime_sun_calibration_RAW.txt" #Log file
     photodiode_weights = np.loadtxt("Weights/utezi_3D.txt") #Calibration weights for Photodiode array
